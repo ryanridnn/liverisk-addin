@@ -1,0 +1,60 @@
+<!-- Copyright (c) Microsoft Corporation. All rights reserved. Licensed under the MIT License. -->
+<!-- This file shows how to design a first-run page that provides a welcome screen to the user about the features of the add-in. -->
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Contoso Task Pane Add-in</title>
+
+    <!-- Office JavaScript API -->
+    <script type="  text/javascript" src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
+
+    <!-- For more information on Fluent UI, visit https://developer.microsoft.com/fluentui#/. -->
+    <link
+      rel="stylesheet"
+      href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/css/fabric.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/css/fabric.components.min.css"
+    />
+    <script src="https://static2.sharepointonline.com/files/fabric/office-ui-fabric-js/1.4.0/js/fabric.min.js"></script>
+
+    <!-- Template styles -->
+  </head>
+
+  <body class="ms-font-m ms-welcome ms-Fabric">
+    <section id="sideload-msg" class="ms-welcome__main">
+      <div class="ms-Spinner ms-Spinner--large loader">
+        <div class="ms-Spinner-label loader__label">Loading Add-In. Please, wait for a moment...</div>
+      </div>
+    </section>
+
+    <main class="app" id="app">
+      <h2 class="app__header">
+        <span>Live Risk Add-In </span>
+        <i data-feather="bar-chart"></i>
+      </h2>
+      <p className="app__lead">Click the button below to generate data to your workbook!</p>
+      <button class="ms-Button ms-Button--primary" id="generateData">
+        <span class="ms-Button-label">Generate Data</span>
+        <i data-feather="check"></i>
+      </button>
+      <button class="ms-Button ms-Button mt-2" id="syncData">
+        <span class="ms-Button-label"> Sync Data </span>
+        <i data-feather="activity"></i>
+      </button>
+      <div class="app__bottom">
+        <div class="progress">
+          <div class="progress__bar"></div>
+          <div class="progress__text">50%</div>
+        </div>
+      </div>
+    </main>
+  </body>
+  <script src="https://unpkg.com/feather-icons"></script>
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+</html>
