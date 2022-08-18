@@ -68,11 +68,27 @@ Office.onReady(async (info) => {
           sheetStore.add([{ id: e.worksheetId, name: sheet.name }]);
         });
         context.workbook.worksheets.onDeleted.add((e) => {
+          const sheet = sheetStore.sheets.find((sheet) => sheet.id === e.worksheetId);
+          if (sheet.name === SHEET_NAMES.DASHBOARD) {
+            dashboardListenerIsExist = false;
+          } else if (sheet.name === SHEET_NAMES.PORTFOLIO) {
+            portfolioListenerIsExist = false;
+          }
           sheetStore.remove(e.worksheetId);
         });
         context.workbook.worksheets.onNameChanged.add((e) => {
-          if (e.nameAfter !== e.nameBefore) {
+          if (
+            e.nameAfter !== e.nameBefore &&
+            ![SHEET_NAMES.DASHBOARD, SHEET_NAMES.PORTFOLIO, SHEET_NAMES.HIDDEN_DATA].includes(e.nameAfter)
+          ) {
+            const sheet = sheetStore.sheets.find((sheet) => sheet.id === e.worksheetId);
+            if (sheet.name === SHEET_NAMES.DASHBOARD) {
+              dashboardListenerIsExist = false;
+            } else if (sheet.name === SHEET_NAMES.PORTFOLIO) {
+              portfolioListenerIsExist = false;
+            }
             sheetStore.remove(e.worksheetId);
+            console.log(dashboardListenerIsExist, portfolioListenerIsExist);
           }
         });
       });
@@ -101,20 +117,37 @@ export function run() {
 
 const syncData = async () => {
   if (connection.connected) {
-    getAndUpdate();
+    await Excel.run(async (context) => {
+      if (!dashboardListenerIsExist) {
+        const dashboardSheet = context.workbook.worksheets.getItem(SHEET_NAMES.DASHBOARD);
+        dashboardListenerIsExist = true;
+        dashboardSheet.onChanged.add(onDashboardSheetChanged);
+      }
+
+      if (!portfolioListenerIsExist) {
+        const portfolioSheet = context.workbook.worksheets.getItem(SHEET_NAMES.PORTFOLIO);
+        portfolioSheet.onChanged.add(onPortfolioSheetChange);
+        portfolioListenerIsExist = true;
+      }
+
+      getAndUpdate();
+    });
   }
   try {
     connect(
       CONNECTION_URL,
       async () => {
         await Excel.run(async (context) => {
-          const dashboardSheet = context.workbook.worksheets.getItem(SHEET_NAMES.DASHBOARD);
-          const portfolioSheet = context.workbook.worksheets.getItem(SHEET_NAMES.PORTFOLIO);
-          if (!dashboardListenerIsExist && !portfolioListenerIsExist) {
+          if (!dashboardListenerIsExist) {
+            const dashboardSheet = context.workbook.worksheets.getItem(SHEET_NAMES.DASHBOARD);
             dashboardListenerIsExist = true;
-            portfolioListenerIsExist = true;
             dashboardSheet.onChanged.add(onDashboardSheetChanged);
+          }
+
+          if (!portfolioListenerIsExist) {
+            const portfolioSheet = context.workbook.worksheets.getItem(SHEET_NAMES.PORTFOLIO);
             portfolioSheet.onChanged.add(onPortfolioSheetChange);
+            portfolioListenerIsExist = true;
           }
 
           getAndUpdate();
