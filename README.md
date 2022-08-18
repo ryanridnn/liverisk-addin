@@ -1,6 +1,6 @@
-# How to get live risk add-in development running
+# How to get live risk add-in development running :grinning:
 
-Follow this few steps to get the development running
+Hello, there! Please, follow this few steps to get the development running :ok_hand:
 
 ## 1. Clone this repo
 
@@ -46,4 +46,4 @@ npm start:web -- --document {url}
 npm start:web -- --document https://onedrive.live.com/edit.aspx?resid=98A980DB4C1378BD!113&ithint=file%2cxlsx&authkey=!ACgGfuAufBzp-Go
 ```
 
-More on excel add-in setup: https://docs.microsoft.com/en-us/office/dev/add-ins/quickstarts/excel-quickstart-jquery?tabs=yeomangenerator
+:heartpulse: More on excel add-in setup: https://docs.microsoft.com/en-us/office/dev/add-ins/quickstarts/excel-quickstart-jquery?tabs=yeomangenerator
