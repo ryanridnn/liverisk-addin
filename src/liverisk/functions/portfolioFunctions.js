@@ -1,6 +1,6 @@
+import { connection } from "../store";
 import { updateParam } from "../connection";
 import { SHEET_NAMES } from "../constants";
-import { connection } from "../store";
 import { generateRandomNumber } from "../utils";
 
 const TABLE_NAMES = {
@@ -35,16 +35,6 @@ export const printPortfolio = async (onCompleted = () => {}) => {
 
 			const tableNames = sheet.tables.m__items.map((table) => table.name);
 
-			const tradesData = Array.from({ length: 12 }).map((item, index) => {
-				const maturity = `4/${index + 1}/2014`;
-				const nominal = generateRandomNumber(100, 500);
-				const startDate = `2/${index + 1}/2015`;
-				const type = "IR SWAP";
-				const lengthInYear = Math.floor(generateRandomNumber(1, 12));
-
-				return [maturity, nominal, startDate, type, lengthInYear];
-			});
-
 			if (!tableNames.includes(TABLE_NAMES.TRADES)) {
 				const table = sheet.tables.add("D5:H5", true);
 				table.getHeaderRowRange().values = [["Maturity", "Nominal", "Start Date", "Type", "Length In Year"]];
@@ -73,7 +63,7 @@ export const printPortfolio = async (onCompleted = () => {}) => {
 	}
 };
 
-export const onPortfolioSheetChange = async (e) => {
+export const onPortfolioSheetChange = (e) => {
 	if (e.address === "B4" && typeof e.details.valueAfter === "number") {
 		updateParam(0, "NumTrades", e.details.valueAfter);
 	}

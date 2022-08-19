@@ -1,7 +1,6 @@
-import { v4 } from "uuid";
+import { connection, sheetStore } from "../store";
 import { SHEET_NAMES } from "../constants";
 import { generateRandomNumber } from "../utils";
-import { connection } from "../store";
 import { updateParam } from "../connection";
 
 const CHART_NAMES = {
@@ -168,48 +167,62 @@ export const onDashboardSheetChanged = async (e) => {
 			if (e.details.valueAfter >= -0.03 && e.details.valueAfter <= 0.03) {
 				updateParam(1, "parallel_shift", e.details.valueAfter);
 			} else {
-				await Excel.run(async (context) => {
-					const sheet = context.workbook.worksheets.getItem(e.worksheetId);
-					const range = sheet.getRange(e.address);
+				try {
+					await Excel.run(async (context) => {
+						const sheet = context.workbook.worksheets.getItem(e.worksheetId);
+						const range = sheet.getRange(e.address);
 
-					range.values = [[typeof e.details.valueBefore === "number" ? e.details.valueBefore : 0]];
-					await context.sync();
-				});
+						range.values = [[typeof e.details.valueBefore === "number" ? e.details.valueBefore : 0]];
+						await context.sync();
+					});
+				} catch (e) {
+					console.log(e);
+				}
 			}
 		} else if (e.address === "B6") {
 			if (e.details.valueAfter >= -0.03 && e.details.valueAfter <= 0.03) {
 				updateParam(1, "parallel_tilt", e.details.valueAfter);
 			} else {
-				await Excel.run(async (context) => {
-					const sheet = context.workbook.worksheets.getItem(e.worksheetId);
-					const range = sheet.getRange(e.address);
+				try {
+					await Excel.run(async (context) => {
+						const sheet = context.workbook.worksheets.getItem(e.worksheetId);
+						const range = sheet.getRange(e.address);
 
-					range.values = [[typeof e.details.valueBefore === "number" ? e.details.valueBefore : 0]];
-					await context.sync();
-				});
+						range.values = [[typeof e.details.valueBefore === "number" ? e.details.valueBefore : 0]];
+						await context.sync();
+					});
+				} catch (e) {
+					console.log(e);
+				}
 			}
 		} else if (e.address === "B7") {
 			if (e.details.valueAfter >= -0.03 && e.details.valueAfter <= 0.03) {
 				updateParam(1, "parallel_twist", e.details.valueAfter);
 			} else {
-				await Excel.run(async (context) => {
-					const sheet = context.workbook.worksheets.getItem(e.worksheetId);
-					const range = sheet.getRange(e.address);
+				try {
+					await Excel.run(async (context) => {
+						const sheet = context.workbook.worksheets.getItem(e.worksheetId);
+						const range = sheet.getRange(e.address);
 
-					range.values = [[typeof e.details.valueBefore === "number" ? e.details.valueBefore : 0]];
-					await context.sync();
-				});
+						range.values = [[typeof e.details.valueBefore === "number" ? e.details.valueBefore : 0]];
+						await context.sync();
+					});
+				} catch (e) {
+					console.log(e);
+				}
 			}
 		}
 	}
 };
 
 export const updateParamsRandomly = () => {
-	const parallel_shift = ((Math.random() * 6 - 3) / 100).toFixed(4);
-	const parallel_tilt = ((Math.random() * 6 - 3) / 100).toFixed(4);
-	const parallel_twist = ((Math.random() * 6 - 3) / 100).toFixed(4);
+	if (sheetStore.sheets.map((sheet) => sheet.name).includes(SHEET_NAMES.DASHBOARD)) {
+		const parallel_shift = ((Math.random() * 6 - 3) / 100).toFixed(4);
+		const parallel_tilt = ((Math.random() * 6 - 3) / 100).toFixed(4);
+		const parallel_twist = ((Math.random() * 6 - 3) / 100).toFixed(4);
 
-	updateParam(1, "parallel_shift", parallel_shift);
-	updateParam(1, "parallel_tilt", parallel_tilt);
-	updateParam(1, "parallel_twist", parallel_twist);
+		updateParam(1, "parallel_shift", parallel_shift);
+		updateParam(1, "parallel_tilt", parallel_tilt);
+		updateParam(1, "parallel_twist", parallel_twist);
+	}
 };

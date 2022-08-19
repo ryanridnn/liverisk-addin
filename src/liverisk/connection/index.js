@@ -1,10 +1,10 @@
-import { connection } from "../store";
+import { connection, alertStore } from "../store";
 import { convertData } from "../utils";
 import { STATUS } from "../constants";
 
 export const connect = (url, onInitial, onChange = () => {}) => {
 	const on_error = () => {
-		console.log("Can not connect to WebSocket. Make sure the server is running and the uri is valid.");
+		alertStore.showAlert("Failed to connect to Websocket! Please try connecting again!");
 	};
 
 	const on_open = () => {

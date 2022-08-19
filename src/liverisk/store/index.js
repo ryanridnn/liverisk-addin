@@ -168,7 +168,7 @@ class ConnectionStore {
 
 export const connection = new ConnectionStore();
 
-export class SheetStore {
+class SheetStore {
 	constructor() {
 		this.sheets = [];
 		this.onChange = () => {};
@@ -188,3 +188,31 @@ export class SheetStore {
 		this.onChange(this.sheets);
 	}
 }
+
+export const sheetStore = new SheetStore();
+
+class AlertStore {
+	constructor() {
+		this.show = false;
+		this.message = null;
+		this.onChange = () => {};
+	}
+
+	showAlert(message) {
+		this.show = true;
+		this.message = message;
+		this.onChange(true, message);
+	}
+
+	hideAlert() {
+		this.show = false;
+		this.message = null;
+		this.onChange(false, null);
+	}
+
+	setOnChange(onChange) {
+		this.onChange = onChange;
+	}
+}
+
+export const alertStore = new AlertStore();

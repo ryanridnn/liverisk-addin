@@ -1,5 +1,5 @@
 import { connect, updateParam } from "./connection";
-import { connection, SheetStore } from "./store";
+import { connection, sheetStore, alertStore } from "./store";
 import { CONNECTION_URL, SHEET_NAMES } from "./constants";
 import { printDashboard, onDashboardSheetChanged, updateParamsRandomly } from "./functions/dashboardFunctions";
 import { onPortfolioSheetChange, printPortfolio } from "./functions/portfolioFunctions";
@@ -14,8 +14,6 @@ const progressText = document.querySelector(".progress__text");
 let dashboardListenerIsExist = false;
 let portfolioListenerIsExist = false;
 
-const sheetStore = new SheetStore();
-
 Office.onReady(async (info) => {
   setupLibraries();
   if (info.host === Office.HostType.Excel) {
@@ -23,23 +21,16 @@ Office.onReady(async (info) => {
     const mainApp = document.getElementById("app");
     const generateDataBtn = document.getElementById("generateData");
     const syncDataBtn = document.getElementById("syncData");
+    const alert = document.querySelector(".alert");
+    const alertText = document.querySelector(".alert__text");
 
     sideload.style.display = "none";
     mainApp.style.display = "flex";
-    generateDataBtn.onclick = run;
+    generateDataBtn.onclick = generateData;
     syncDataBtn.onclick = syncData;
 
-    let randomizeInterval;
-
-    connection.useProgressEffect(onProgress);
-    connection.useRandomizeDataEffect((randomize) => {
-      if (randomize) {
-        updateParamsRandomly();
-        randomizeInterval = setInterval(updateParamsRandomly, 4000);
-      } else {
-        if (randomizeInterval) clearInterval(randomizeInterval);
-      }
-    });
+    connection.useProgressEffect(onProgressChange);
+    connection.useRandomizeDataEffect(onRandomizeChange);
 
     sheetStore.setOnChange((sheets) => {
       if (
@@ -52,6 +43,19 @@ Office.onReady(async (info) => {
       } else {
         generateDataBtn.disabled = false;
         syncDataBtn.disabled = true;
+      }
+    });
+
+    alertStore.setOnChange((show, message) => {
+      if (show) {
+        alert.style.transform = "translate(-50%, 0)";
+        alertText.innerHTML = message;
+        const timeout = setTimeout(() => {
+          alertStore.hideAlert();
+          clearTimeout(timeout);
+        }, 5000);
+      } else {
+        alert.style.transform = "translate(-50%, calc(-100% - .5rem))";
       }
     });
     try {
@@ -71,6 +75,7 @@ Office.onReady(async (info) => {
           const sheet = sheetStore.sheets.find((sheet) => sheet.id === e.worksheetId);
           if (sheet.name === SHEET_NAMES.DASHBOARD) {
             dashboardListenerIsExist = false;
+            connection.setRandomizeData(false);
           } else if (sheet.name === SHEET_NAMES.PORTFOLIO) {
             portfolioListenerIsExist = false;
           }
@@ -84,81 +89,36 @@ Office.onReady(async (info) => {
             const sheet = sheetStore.sheets.find((sheet) => sheet.id === e.worksheetId);
             if (sheet.name === SHEET_NAMES.DASHBOARD) {
               dashboardListenerIsExist = false;
+              connection.setRandomizeData(false);
             } else if (sheet.name === SHEET_NAMES.PORTFOLIO) {
               portfolioListenerIsExist = false;
             }
             sheetStore.remove(e.worksheetId);
-            console.log(dashboardListenerIsExist, portfolioListenerIsExist);
           }
         });
       });
     } catch (e) {
-      console.log(e);
+      alertStore.showAlert("<b>Failed to setup Live Risk Add-In!</b> Please reload this add-in!");
     }
   }
 });
 
-export function run() {
+export function generateData() {
   if (connection.connected) {
-    generateData();
+    generateSheets();
   } else {
-    connect(
-      CONNECTION_URL,
-      () => {
-        generateData();
-        console.log(connection);
-      },
-      () => {
-        generateData();
-      }
-    );
+    connect(CONNECTION_URL, generateSheets, generateSheets);
   }
 }
 
 const syncData = async () => {
   if (connection.connected) {
-    await Excel.run(async (context) => {
-      if (!dashboardListenerIsExist) {
-        const dashboardSheet = context.workbook.worksheets.getItem(SHEET_NAMES.DASHBOARD);
-        dashboardListenerIsExist = true;
-        dashboardSheet.onChanged.add(onDashboardSheetChanged);
-      }
-
-      if (!portfolioListenerIsExist) {
-        const portfolioSheet = context.workbook.worksheets.getItem(SHEET_NAMES.PORTFOLIO);
-        portfolioSheet.onChanged.add(onPortfolioSheetChange);
-        portfolioListenerIsExist = true;
-      }
-
-      getAndUpdate();
-    });
+    setListenerAndSync();
   }
   try {
-    connect(
-      CONNECTION_URL,
-      async () => {
-        await Excel.run(async (context) => {
-          if (!dashboardListenerIsExist) {
-            const dashboardSheet = context.workbook.worksheets.getItem(SHEET_NAMES.DASHBOARD);
-            dashboardListenerIsExist = true;
-            dashboardSheet.onChanged.add(onDashboardSheetChanged);
-          }
-
-          if (!portfolioListenerIsExist) {
-            const portfolioSheet = context.workbook.worksheets.getItem(SHEET_NAMES.PORTFOLIO);
-            portfolioSheet.onChanged.add(onPortfolioSheetChange);
-            portfolioListenerIsExist = true;
-          }
-
-          getAndUpdate();
-        });
-      },
-      async () => {
-        generateData();
-      }
-    );
+    connect(CONNECTION_URL, setListenerAndSync, generateSheets);
   } catch (e) {
-    console.log(e);
+    alertStore.showAlert("<b>Failed to sync the data!</b> Please click the sync button again!");
     dashboardListenerIsExist = false;
     portfolioListenerIsExist = false;
   }
@@ -221,28 +181,33 @@ const getAndUpdate = async () => {
       }
     });
   } catch (e) {
-    console.log(e);
+    alertStore.showAlert("<b>Failed to sync the data!</b> Please click the sync button again!");
   }
 };
 
-const onProgress = (progress) => {
-  const progressInPercentage =
-    progress === 0 || progress === 1 ? progress * 100 + "%" : (progress * 100).toFixed(2) + "%";
+const setListenerAndSync = async () => {
+  try {
+    await Excel.run(async (context) => {
+      if (!dashboardListenerIsExist) {
+        const dashboardSheet = context.workbook.worksheets.getItem(SHEET_NAMES.DASHBOARD);
+        dashboardListenerIsExist = true;
+        dashboardSheet.onChanged.add(onDashboardSheetChanged);
+      }
 
-  if (progress === 0 || progress === 1) {
-    const timeout = setTimeout(() => {
-      appBottom.style.transform = "translateY(100%)";
-      clearTimeout(timeout);
-    }, 500);
-  } else {
-    appBottom.style.transform = "translateY(0)";
+      if (!portfolioListenerIsExist) {
+        const portfolioSheet = context.workbook.worksheets.getItem(SHEET_NAMES.PORTFOLIO);
+        portfolioSheet.onChanged.add(onPortfolioSheetChange);
+        portfolioListenerIsExist = true;
+      }
+
+      getAndUpdate();
+    });
+  } catch (e) {
+    alertStore.showAlert("<b>Failed to setup the synchronization!</b> Please click the sync button again!");
   }
-
-  progressBar.style.width = progressInPercentage;
-  progressText.innerText = progressInPercentage;
 };
 
-const generateData = async () => {
+const generateSheets = async () => {
   try {
     await Excel.run(async (context) => {
       const sheets = context.workbook.worksheets;
@@ -299,7 +264,35 @@ const generateData = async () => {
       }
     });
   } catch (e) {
-    console.log(e);
+    alertStore.showAlert("<b>Failed to generate sheets!</b> Please try again!");
+  }
+};
+
+const onProgressChange = (progress) => {
+  const progressInPercentage =
+    progress === 0 || progress === 1 ? progress * 100 + "%" : (progress * 100).toFixed(2) + "%";
+
+  if (progress === 0 || progress === 1) {
+    const timeout = setTimeout(() => {
+      appBottom.style.transform = "translateY(100%)";
+      clearTimeout(timeout);
+    }, 500);
+  } else {
+    appBottom.style.transform = "translateY(0)";
+  }
+
+  progressBar.style.width = progressInPercentage;
+  progressText.innerText = progressInPercentage;
+};
+
+let randomizeInterval;
+
+const onRandomizeChange = (randomize) => {
+  if (randomize) {
+    updateParamsRandomly();
+    randomizeInterval = setInterval(updateParamsRandomly, 4000);
+  } else {
+    if (randomizeInterval) clearInterval(randomizeInterval);
   }
 };
 

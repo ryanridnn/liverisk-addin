@@ -38,6 +38,20 @@ body {
   gap: 0.5rem;
 }
 
+.alert {
+  position: absolute;
+  top: 0.5rem;
+  left: 50%;
+  transform: translate(-50%, calc(-100% - 0.5rem));
+  display: flex;
+  width: 100%;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #fdfcd9;
+  max-width: 90%;
+  transition: all 0.2s ease;
+}
+
 #generateData {
   margin-top: 0.5rem;
   display: flex;
