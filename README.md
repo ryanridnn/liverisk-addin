@@ -41,9 +41,9 @@ Running the development server does not automatically open excel for desktop nor
 npm start
 
 # to start excel online
-npm start:web -- --document {url}
+npm run start:web -- --document {url}
 # example
-npm start:web -- --document https://onedrive.live.com/edit.aspx?resid=98A980DB4C1378BD!113&ithint=file%2cxlsx&authkey=!ACgGfuAufBzp-Go
+npm run start:web -- --document https://onedrive.live.com/edit.aspx?resid=98A980DB4C1378BD!113&ithint=file%2cxlsx&authkey=!ACgGfuAufBzp-Go
 ```
 
 :heartpulse: More on excel add-in setup: https://docs.microsoft.com/en-us/office/dev/add-ins/quickstarts/excel-quickstart-jquery?tabs=yeomangenerator
